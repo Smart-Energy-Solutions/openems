@@ -24,6 +24,7 @@ export enum WidgetFactory {
     'Controller.CHP.SoC',
     'Controller.Asymmetric.PeakShaving',
     'Controller.Symmetric.PeakShaving',
+    'Controller.Symmetric.DynamicDischarge',
     'Evcs.Cluster.PeakShaving',
     'Evcs.Cluster.SelfConsumtion',
 }
@@ -31,6 +32,69 @@ export enum WidgetFactory {
 export class Widget {
     name: WidgetNature | WidgetFactory | String;
     componentId: string
+}
+
+export class AdvertWidget {
+    name: string
+}
+
+export enum advertisableWidgetNautre {
+    'io.openems.edge.evcs.api.Evcs',
+}
+
+export enum advertisableWidgetProducttype {
+    'Kostal PIKO + B-Box HV',
+    'MiniES 3-3',
+    'MiniES 3-6',
+    'Pro 9-12',
+    'PRO Compact 3-10',
+    'Pro Hybrid 10-Serie',
+    'PRO Hybrid 9-10',
+    'Pro Hybrid GW',
+}
+
+
+export class AdvertWidgets {
+
+    public static parseAdvertWidgets(edge: Edge, config: EdgeConfig) {
+
+        let list: AdvertWidget[] = [];
+
+        for (let producttype of Object.values(advertisableWidgetProducttype).filter(v => typeof v === 'string')) {
+            if (producttype == edge.producttype) {
+                list.push({ name: producttype });
+            }
+        }
+
+        for (let nature of Object.values(advertisableWidgetNautre).filter(v => typeof v === 'string')) {
+            if (nature == 'io.openems.edge.evcs.api.Evcs' && config.widgets.names.includes('io.openems.edge.evcs.api.Evcs') == false) {
+                list.push({ name: nature });
+            }
+        }
+
+        return new AdvertWidgets(list);
+    }
+
+    /**
+     * Names of Widgets.
+     */
+    public readonly names: string[] = [];
+
+    private constructor(
+        /**
+         * List of all Widgets.
+         */
+        public readonly list: AdvertWidget[],
+    ) {
+        // fill names
+        for (let widget of list) {
+            let name: string = widget.name.toString();
+            if (!this.names.includes(name)) {
+                this.names.push(name);
+            }
+        }
+    }
+
 }
 
 export class Widgets {

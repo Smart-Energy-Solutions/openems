@@ -15,6 +15,7 @@ import { ChannelAddress } from '../shared';
 import { Language, LanguageTag } from '../translate/language';
 import { Role } from '../type/role';
 import { DefaultTypes } from './defaulttypes';
+import { Widgets, AdvertWidgets } from '../type/widget';
 
 @Injectable()
 export class Service implements ErrorHandler {
@@ -78,6 +79,18 @@ export class Service implements ErrorHandler {
   }
 
   /**
+   * Returns the configured language for docs.fenecon.de
+   */
+
+  public getDocsLang(): string {
+    if (this.translate.currentLang == "German") {
+      return "de";
+    } else {
+      return "en";
+    }
+  }
+
+  /**
    * Gets the token from the cookie
    */
   public getToken(): string {
@@ -126,7 +139,7 @@ export class Service implements ErrorHandler {
       // Set the currentPageTitle only once per ActivatedRoute
       if (this.currentActivatedRoute != activatedRoute) {
         if (currentPageTitle == null || currentPageTitle.trim() === '') {
-          this.currentPageTitle = 'OpenEMS UI';
+          this.currentPageTitle = 'FENECON Online-Monitoring';
         } else {
           this.currentPageTitle = currentPageTitle;
         }
@@ -284,8 +297,46 @@ export class Service implements ErrorHandler {
    * checks if fems is allowed to show kWh
    */
   public isKwhAllowed(edge: Edge): boolean {
+    if (!edge) {
+      return false;
+    }
+    if (['fems7', 'fems66', 'fems566', 'fems888', 'fems1802', 'fems361'].includes(edge.id)) {
+      return true;
+    }
+    if (['PRO Hybrid 9-10', 'Pro Hybrid GW'].includes(edge.producttype)) {
+      return true;
+    }
     return false;
   }
+
+  /**
+   * checks if fems is allowed to show partner widget
+   */
+  // TODO: encapsulate data for different partners
+  public isPartnerAllowed(edge: Edge): boolean {
+    if (!edge) {
+      return false;
+    }
+    if (['fems1267', 'fems1495', 'fems1886'].includes(edge.id)) {
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * checks if fems is allowed to show advertisement widget
+   */
+  public isAdvertAllowed(edge: Edge, advertWidgets: AdvertWidgets, widgets: Widgets) {
+    if (advertWidgets.names.includes(edge.producttype) == true) {
+      return true;
+    }
+    if (widgets.names.includes('io.openems.edge.evcs.api.Evcs') == false) {
+      return true;
+    }
+    return false;
+  }
+
+
 
   /**
    * Currently selected history period

@@ -24,7 +24,9 @@ export module DefaultTypes {
       // autarchy in percent
       autarchy: number,
       // self consumption in percent
-      selfConsumption: number
+      selfConsumption: number,
+      // state 0: Ok, 1: Info, 2: Warning, 3: Fault
+      state: number
     }, storage: {
       soc: number,
       activePowerL1: number,
@@ -46,7 +48,6 @@ export module DefaultTypes {
       effectivePower: number,
       effectiveChargePower: number,
       effectiveDischargePower: number,
-      capacity: number,
     }, production: {
       powerRatio: number,
       hasDC: boolean,

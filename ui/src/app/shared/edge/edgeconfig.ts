@@ -1,5 +1,5 @@
 import { ChannelAddress } from '../type/channeladdress';
-import { Widgets } from '../type/widget';
+import { Widgets, AdvertWidgets } from '../type/widget';
 import { Edge } from './edge';
 
 export interface CategorizedComponents {
@@ -79,6 +79,9 @@ export class EdgeConfig {
 
         // Initialize Widgets
         this.widgets = Widgets.parseWidgets(edge, this);
+
+        // Initialize Advertisement Widgets
+        this.advertWidgets = AdvertWidgets.parseAdvertWidgets(edge, this);
     }
 
     /**
@@ -100,6 +103,11 @@ export class EdgeConfig {
      * UI-Widgets.
      */
     public readonly widgets: Widgets;
+
+    /**
+     * UI-Advertisement-Widgets
+     */
+    public readonly advertWidgets: AdvertWidgets;
 
     public isValid(): boolean {
         return Object.keys(this.components).length > 0 && Object.keys(this.factories).length > 0;
@@ -403,6 +411,22 @@ export class EdgeConfig {
     }
 
     /**
+     * Returns the corresponding icon for a given factory
+     */
+    public getFactoryIcon(factory: EdgeConfig.Factory): string {
+        // default icon, if no icons are found
+        let result = "stats-chart-outline";
+        this.listAvailableFactories().forEach(availableFactories => {
+            availableFactories.factories.forEach(availableFactory => {
+                if (factory == availableFactory) {
+                    result = availableFactories.category.icon;
+                }
+            })
+        })
+        return result;
+    }
+
+    /**
      * Lists all active Components, grouped by category.
      */
     public listActiveComponents(ignoreComponentIds: string[]): CategorizedComponents[] {
@@ -437,7 +461,6 @@ export class EdgeConfig {
         })
         return result;
     }
-
 
     /**
      * Get the implemented Natures by Component-ID.

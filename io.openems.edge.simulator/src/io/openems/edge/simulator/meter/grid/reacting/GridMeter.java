@@ -63,11 +63,11 @@ public class GridMeter extends AbstractOpenemsComponent implements SymmetricMete
 			target = "(enabled=true)")
 	protected void addEss(ManagedSymmetricEss ess) {
 		this.symmetricEsss.add(ess);
-		ess.getActivePower().onSetNextValue(this.updateChannelsCallback);
+		ess.getActivePowerChannel().onSetNextValue(this.updateChannelsCallback);
 	}
 
 	protected void removeEss(ManagedSymmetricEss ess) {
-		ess.getActivePower().removeOnSetNextValueCallback(this.updateChannelsCallback);
+		ess.getActivePowerChannel().removeOnSetNextValueCallback(this.updateChannelsCallback);
 		this.symmetricEsss.remove(ess);
 	}
 
@@ -81,11 +81,11 @@ public class GridMeter extends AbstractOpenemsComponent implements SymmetricMete
 			target = "(&(enabled=true)(!(service.factoryPid=Simulator.GridMeter.Reacting)))")
 	protected void addMeter(SymmetricMeter meter) {
 		this.symmetricMeters.add(meter);
-		meter.getActivePower().onSetNextValue(this.updateChannelsCallback);
+		meter.getActivePowerChannel().onSetNextValue(this.updateChannelsCallback);
 	}
 
 	protected void removeMeter(SymmetricMeter meter) {
-		meter.getActivePower().removeOnSetNextValueCallback(this.updateChannelsCallback);
+		meter.getActivePowerChannel().removeOnSetNextValueCallback(this.updateChannelsCallback);
 		this.symmetricMeters.remove(meter);
 	}
 
@@ -97,7 +97,7 @@ public class GridMeter extends AbstractOpenemsComponent implements SymmetricMete
 
 		for (ManagedSymmetricEss ess : this.symmetricEsss) {
 			try {
-				powerSum += ess.getActivePower().getNextValue().get();
+				powerSum += ess.getActivePowerChannel().getNextValue().get();
 			} catch (NullPointerException e) {
 				// ignore
 			}
@@ -109,14 +109,14 @@ public class GridMeter extends AbstractOpenemsComponent implements SymmetricMete
 					// ignore
 					break;
 				case CONSUMPTION_NOT_METERED:
-					powerSum -= sm.getActivePower().getNextValue().get();
+					powerSum -= sm.getActivePowerChannel().getNextValue().get();
 					break;
 				case GRID:
 					gridCount++;
 					break;
 				case PRODUCTION:
 				case PRODUCTION_AND_CONSUMPTION:
-					powerSum += sm.getActivePower().getNextValue().get();
+					powerSum += sm.getActivePowerChannel().getNextValue().get();
 					break;
 				}
 			} catch (NullPointerException e) {
@@ -131,10 +131,10 @@ public class GridMeter extends AbstractOpenemsComponent implements SymmetricMete
 			activePower /= gridCount;
 		}
 
-		this.getActivePower().setNextValue(activePower);
-		this.getActivePowerL1().setNextValue(activePower / 3);
-		this.getActivePowerL2().setNextValue(activePower / 3);
-		this.getActivePowerL3().setNextValue(activePower / 3);
+		this._setActivePower(activePower);
+		this._setActivePowerL1(activePower / 3);
+		this._setActivePowerL2(activePower / 3);
+		this._setActivePowerL3(activePower / 3);
 	};
 
 	@Activate
@@ -163,6 +163,6 @@ public class GridMeter extends AbstractOpenemsComponent implements SymmetricMete
 
 	@Override
 	public String debugLog() {
-		return this.getActivePower().value().asString();
+		return this.getActivePower().asString();
 	}
 }
