@@ -6,6 +6,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -41,6 +42,7 @@ import io.openems.common.jsonrpc.base.JsonrpcRequest;
 import io.openems.common.jsonrpc.base.JsonrpcResponseSuccess;
 import io.openems.common.jsonrpc.request.CreateComponentConfigRequest;
 import io.openems.common.jsonrpc.request.DeleteComponentConfigRequest;
+import io.openems.common.jsonrpc.request.UpdateComponentConfigRequest.Property;
 import io.openems.common.session.Role;
 import io.openems.common.session.User;
 import io.openems.common.types.ChannelAddress;
@@ -175,6 +177,10 @@ public class SimulatorApp extends AbstractOpenemsComponent
 
 		// Stop Cycle
 		this.setCycleTime(AbstractWorker.ALWAYS_WAIT_FOR_TRIGGER_NEXT_RUN);
+
+		// Create Ess.Power with disabled PID filter
+		this.componentManager.handleJsonrpcRequest(user,
+				new CreateComponentConfigRequest("Ess.Power", Arrays.asList(new Property("enablePid", false))));
 
 		// Create Components
 		Set<String> simulatorComponentIds = new HashSet<String>();
@@ -321,7 +327,6 @@ public class SimulatorApp extends AbstractOpenemsComponent
 			}
 			switch (factoryPid) {
 			case "Simulator.App":
-			case "Ess.Power":
 				// ignore
 				break;
 			default:
