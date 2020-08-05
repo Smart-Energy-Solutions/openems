@@ -1,12 +1,8 @@
-import { AdvertisementModule } from './advertisement/advertisement.module';
+import { AdministrationComponent } from './evcs/modal/administration/administration.component';
 import { AsymmetricPeakshavingComponent } from './peakshaving/asymmetric/asymmetricpeakshaving.component';
 import { AsymmetricPeakshavingModalComponent } from './peakshaving/asymmetric/modal/modal.component';
 import { AutarchyComponent } from './autarchy/autarchy.component';
 import { AutarchyModalComponent } from './autarchy/modal/modal.component';
-import { AwattarAdvertChartComponent } from './awattar_advert/modal/chart.component';
-import { AwattarAdvertComponent } from './awattar_advert/awattar.component';
-import { AwattarAdvertModalComponent } from './awattar_advert/modal/modal.component';
-import { AwattarComponent } from './awattar/awattar.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { BrowserModule } from '@angular/platform-browser';
 import { ChannelthresholdComponent } from './channelthreshold/channelthreshold.component';
@@ -14,9 +10,6 @@ import { ChpSocComponent } from './chpsoc/chpsoc.component';
 import { ChpsocModalComponent } from './chpsoc/modal/modal.component';
 import { ConsumptionComponent } from './consumption/consumption.component';
 import { ConsumptionModalComponent } from './consumption/modal/modal.component';
-import { CorrentlyChartComponent } from './corrently/modal/chart.component';
-import { CorrentlyComponent } from './corrently/corrently.component';
-import { CorrentlyModalComponent } from './corrently/modal/modal.component';
 import { EnergymonitorModule } from './energymonitor/energymonitor.module';
 import { EvcsChart } from './evcsCluster/modal/evcs-chart/evcs.chart';
 import { EvcsClusterComponent } from './evcsCluster/evcsCluster.component';
@@ -34,7 +27,6 @@ import { LiveComponent } from './live.component';
 import { ModalComponentEvcsCluster } from './evcsCluster/modal/evcsCluster-modal.page';
 import { NgModule } from '@angular/core';
 import { OfflineComponent } from './offline/offline.component';
-import { PartnerComponent } from './partner/partner.component';
 import { ProductionComponent } from './production/production.component';
 import { ProductionModalComponent } from './production/modal/modal.component';
 import { SelfConsumptionComponent } from './selfconsumption/selfconsumption.component';
@@ -49,19 +41,17 @@ import { SymmetricPeakshavingModalComponent } from './peakshaving/symmetric/moda
 
 @NgModule({
   imports: [
-    AdvertisementModule,
     BrowserAnimationsModule,
     BrowserModule,
     EnergymonitorModule,
     SharedModule,
   ],
   entryComponents: [
+    AdministrationComponent,
     AsymmetricPeakshavingModalComponent,
     AutarchyModalComponent,
-    AwattarAdvertModalComponent,
     ChpsocModalComponent,
     ConsumptionModalComponent,
-    CorrentlyModalComponent,
     EvcsModalComponent,
     EvcsPopoverComponent,
     FixDigitalOutputModalComponent,
@@ -75,22 +65,16 @@ import { SymmetricPeakshavingModalComponent } from './peakshaving/symmetric/moda
     SymmetricPeakshavingModalComponent,
   ],
   declarations: [
+    AdministrationComponent,
     AsymmetricPeakshavingComponent,
     AsymmetricPeakshavingModalComponent,
     AutarchyComponent,
     AutarchyModalComponent,
-    AwattarAdvertChartComponent,
-    AwattarAdvertComponent,
-    AwattarAdvertModalComponent,
-    AwattarComponent,
     ChannelthresholdComponent,
     ChpSocComponent,
     ChpsocModalComponent,
     ConsumptionComponent,
     ConsumptionModalComponent,
-    CorrentlyChartComponent,
-    CorrentlyComponent,
-    CorrentlyModalComponent,
     EvcsChart,
     EvcsClusterComponent,
     EvcsComponent,
@@ -107,7 +91,6 @@ import { SymmetricPeakshavingModalComponent } from './peakshaving/symmetric/moda
     LiveComponent,
     ModalComponentEvcsCluster,
     OfflineComponent,
-    PartnerComponent,
     ProductionComponent,
     ProductionModalComponent,
     SelfConsumptionComponent,
