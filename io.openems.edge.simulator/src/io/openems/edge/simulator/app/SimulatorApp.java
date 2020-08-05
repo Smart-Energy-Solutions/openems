@@ -44,6 +44,7 @@ import io.openems.common.jsonrpc.request.DeleteComponentConfigRequest;
 import io.openems.common.session.Role;
 import io.openems.common.session.User;
 import io.openems.common.types.ChannelAddress;
+import io.openems.common.types.OpenemsType;
 import io.openems.common.worker.AbstractWorker;
 import io.openems.edge.common.channel.Channel;
 import io.openems.edge.common.channel.Doc;
@@ -55,6 +56,9 @@ import io.openems.edge.common.cycle.Cycle;
 import io.openems.edge.common.event.EdgeEventConstants;
 import io.openems.edge.common.jsonapi.JsonApi;
 import io.openems.edge.common.test.TimeLeapClock;
+import io.openems.edge.common.type.TypeUtils;
+import io.openems.edge.simulator.app.ExecuteSimulationRequest.Profile;
+import io.openems.edge.simulator.datasource.api.SimulatorDatasource;
 
 @Designate(ocd = Config.class, factory = false)
 @Component(//
@@ -67,7 +71,7 @@ import io.openems.edge.common.test.TimeLeapClock;
 				EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_AFTER_WRITE //
 		})
 public class SimulatorApp extends AbstractOpenemsComponent
-		implements ClockProvider, OpenemsComponent, JsonApi, EventHandler {
+		implements SimulatorDatasource, ClockProvider, OpenemsComponent, JsonApi, EventHandler {
 
 	private static final long MILLISECONDS_BETWEEN_LOGS = 5_000;
 
@@ -168,6 +172,9 @@ public class SimulatorApp extends AbstractOpenemsComponent
 		this.logInfo(this.log, "Starting Simulation");
 
 		this.deleteAllConfigurations(user);
+
+		// Stop Cycle
+		this.setCycleTime(AbstractWorker.ALWAYS_WAIT_FOR_TRIGGER_NEXT_RUN);
 
 		// Create Components
 		Set<String> simulatorComponentIds = new HashSet<String>();
@@ -280,7 +287,13 @@ public class SimulatorApp extends AbstractOpenemsComponent
 			}
 		}
 		if (this.repeatCounter == 0) {
+			// Apply time leap
 			clock.leap(currentSimulationRequest.clock.timeleapPerCycle, ChronoUnit.MILLIS);
+
+			// Select next profile values
+			for (Profile profile : this.currentSimulation.request.profiles.values()) {
+				profile.selectNextValue();
+			}
 		}
 	}
 
@@ -420,6 +433,27 @@ public class SimulatorApp extends AbstractOpenemsComponent
 			}
 		}
 		throw new OpenemsException("Timeout while waiting for [" + stillExistingComponents + "] to disappear");
+	}
+
+	@Override
+	public Set<String> getKeys() {
+		if (this.currentSimulation == null) {
+			return new HashSet<String>();
+		}
+		return this.currentSimulation.request.profiles.keySet();
+	}
+
+	@Override
+	public int getTimeDelta() {
+		return -1;
+	}
+
+	@Override
+	public <T> T getValue(OpenemsType type, String channelAddress) {
+		if (this.currentSimulation == null) {
+			return null;
+		}
+		return TypeUtils.getAsType(type, this.currentSimulation.request.profiles.get(channelAddress).getCurrentValue());
 	}
 
 }

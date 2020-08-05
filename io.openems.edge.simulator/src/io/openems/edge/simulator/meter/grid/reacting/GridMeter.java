@@ -1,8 +1,7 @@
 package io.openems.edge.simulator.meter.grid.reacting;
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.Consumer;
 
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -21,6 +20,7 @@ import io.openems.edge.common.channel.Doc;
 import io.openems.edge.common.channel.value.Value;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
+import io.openems.edge.common.type.TypeUtils;
 import io.openems.edge.ess.api.ManagedSymmetricEss;
 import io.openems.edge.meter.api.AsymmetricMeter;
 import io.openems.edge.meter.api.MeterType;
@@ -54,7 +54,7 @@ public class GridMeter extends AbstractOpenemsComponent implements SymmetricMete
 	@Reference
 	protected ConfigurationAdmin cm;
 
-	private final Set<ManagedSymmetricEss> symmetricEsss = new HashSet<>();
+	private final CopyOnWriteArraySet<ManagedSymmetricEss> symmetricEsss = new CopyOnWriteArraySet<>();
 
 	@Reference(//
 			policy = ReferencePolicy.DYNAMIC, //
@@ -71,9 +71,8 @@ public class GridMeter extends AbstractOpenemsComponent implements SymmetricMete
 		this.symmetricEsss.remove(ess);
 	}
 
-	private final Set<SymmetricMeter> symmetricMeters = new HashSet<>();
+	private final CopyOnWriteArraySet<SymmetricMeter> symmetricMeters = new CopyOnWriteArraySet<>();
 
-	// all meters are needed even grid meters
 	@Reference(//
 			policy = ReferencePolicy.DYNAMIC, //
 			policyOption = ReferencePolicyOption.GREEDY, //
@@ -90,33 +89,24 @@ public class GridMeter extends AbstractOpenemsComponent implements SymmetricMete
 	}
 
 	private final Consumer<Value<Integer>> updateChannelsCallback = (value) -> {
-		// calculate power sum from all meters and esss, but exclude grid meters.
-		// Count the latter to spread the load equally on the different grid-nodes.
-		int powerSum = 0;
-		int gridCount = 0;
+		Integer sum = null;
 
 		for (ManagedSymmetricEss ess : this.symmetricEsss) {
-			try {
-				powerSum += ess.getActivePowerChannel().getNextValue().get();
-			} catch (NullPointerException e) {
-				// ignore
-			}
+			sum = subtract(sum, ess.getActivePowerChannel().getNextValue().get());
 		}
 		for (SymmetricMeter sm : this.symmetricMeters) {
 			try {
 				switch (sm.getMeterType()) {
 				case CONSUMPTION_METERED:
+				case GRID:
 					// ignore
 					break;
 				case CONSUMPTION_NOT_METERED:
-					powerSum -= sm.getActivePowerChannel().getNextValue().get();
-					break;
-				case GRID:
-					gridCount++;
+					sum = add(sum, sm.getActivePowerChannel().getNextValue().get());
 					break;
 				case PRODUCTION:
 				case PRODUCTION_AND_CONSUMPTION:
-					powerSum += sm.getActivePowerChannel().getNextValue().get();
+					sum = subtract(sum, sm.getActivePowerChannel().getNextValue().get());
 					break;
 				}
 			} catch (NullPointerException e) {
@@ -124,18 +114,37 @@ public class GridMeter extends AbstractOpenemsComponent implements SymmetricMete
 			}
 		}
 
-		int activePower = -powerSum;
-		// prevent division by 0 (occurs at startup of the first GridMeter)
-		if (gridCount != 0) {
-			// grids level the resulting power on 0
-			activePower /= gridCount;
-		}
+		this._setActivePower(sum);
 
-		this._setActivePower(activePower);
-		this._setActivePowerL1(activePower / 3);
-		this._setActivePowerL2(activePower / 3);
-		this._setActivePowerL3(activePower / 3);
+		Integer simulatedActivePowerByThree = TypeUtils.divide(sum, 3);
+		this._setActivePowerL1(simulatedActivePowerByThree);
+		this._setActivePowerL2(simulatedActivePowerByThree);
+		this._setActivePowerL3(simulatedActivePowerByThree);
 	};
+
+	private static Integer add(Integer sum, Integer activePower) {
+		if (activePower == null && sum == null) {
+			return null;
+		} else if (activePower == null) {
+			return sum;
+		} else if (sum == null) {
+			return activePower;
+		} else {
+			return sum + activePower;
+		}
+	}
+
+	private static Integer subtract(Integer sum, Integer activePower) {
+		if (activePower == null && sum == null) {
+			return null;
+		} else if (activePower == null) {
+			return sum;
+		} else if (sum == null) {
+			return activePower * -1;
+		} else {
+			return sum - activePower;
+		}
+	}
 
 	@Activate
 	void activate(ComponentContext context, Config config) throws IOException {
